@@ -9,5 +9,15 @@ services:
       - '3000:3000'
     volumes:
       - .:/user/src/app
+  auth:
+    build:
+      context: .
+      dockerfile: ./apps/auth/Dockerfile
+      target: development
+    command: yarn start:dev auth
+    ports:
+      - '3001:3001'
+    volumes:
+      - .:/user/src/app
   mongo:
     image: mongo
