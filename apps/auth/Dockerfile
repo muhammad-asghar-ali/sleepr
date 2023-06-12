@@ -6,7 +6,7 @@ COPY package.json ./
 COPY yarn.lock ./
 
 # RUN npm install -g yarn
-RUN yarn install
+# RUN yarn install
 
 COPY . .
 
