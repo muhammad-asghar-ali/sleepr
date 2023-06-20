@@ -1,4 +1,4 @@
-import { PAYMENTS_SERVCIE } from "@app/common";
+import { PAYMENTS_SERVCIE, UserDto } from "@app/common";
 import { Inject, Injectable } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
 import { map, pipe } from "rxjs";
@@ -15,10 +15,10 @@ export class ReservationsService {
 
   public async create(
     createReservationDto: CreateReservationDto,
-    userId: string
+    { email, _id: userId }: UserDto
   ) {
     return this.paymentsService
-      .send("create_charge", createReservationDto.charge)
+      .send("create_charge", { ...createReservationDto.charge, email })
       .subscribe(
         pipe(
           map((res: Stripe.Response<Stripe.PaymentIntent>) => {
