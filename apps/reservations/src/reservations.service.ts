@@ -1,6 +1,8 @@
 import { PAYMENTS_SERVCIE } from "@app/common";
 import { Inject, Injectable } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
+import { map, pipe } from "rxjs";
+import Stripe from "stripe";
 import { CreateReservationDto, UpdateReservationDto } from "./dto";
 import { ReservationRepository } from "./reservations.repository";
 
@@ -8,15 +10,27 @@ import { ReservationRepository } from "./reservations.repository";
 export class ReservationsService {
   constructor(
     private readonly reservationRepo: ReservationRepository,
-    @Inject(PAYMENTS_SERVCIE) paymentsService: ClientProxy
+    @Inject(PAYMENTS_SERVCIE) private readonly paymentsService: ClientProxy
   ) {}
 
-  public async create(createReservationDto: CreateReservationDto, userId: string) {
-    return this.reservationRepo.create({
-      ...createReservationDto,
-      timestamp: new Date(),
-      userId: userId,
-    });
+  public async create(
+    createReservationDto: CreateReservationDto,
+    userId: string
+  ) {
+    return this.paymentsService
+      .send("create_charge", createReservationDto.charge)
+      .subscribe(
+        pipe(
+          map((res: Stripe.Response<Stripe.PaymentIntent>) => {
+            return this.reservationRepo.create({
+              ...createReservationDto,
+              timestamp: new Date(),
+              userId: userId,
+              invoiceId: res.id,
+            });
+          })
+        )
+      );
   }
 
   public async findAll() {
@@ -34,7 +48,7 @@ export class ReservationsService {
     );
   }
 
-  public async  remove(_id: string) {
+  public async remove(_id: string) {
     return this.reservationRepo.findOneAndDelete({ _id });
   }
 }

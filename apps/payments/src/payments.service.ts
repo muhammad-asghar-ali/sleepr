@@ -13,7 +13,7 @@ export class PaymentsService {
   );
   constructor(private readonly configService: ConfigService) {}
 
-  public async createCharge({ card, amount }: CreateChargeDto) {
+  public async createCharge({ card, amount }: CreateChargeDto): Promise<Stripe.Response<Stripe.PaymentIntent>> {
     const paymentMethod = await this.stripe.paymentMethods.create({
       type: "card",
       card,
