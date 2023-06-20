@@ -1,6 +1,7 @@
-import { LoggerModule } from "@app/common";
+import { LoggerModule, NOTIFICATIONS_SERVCIE } from "@app/common";
 import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ClientsModule, Transport } from "@nestjs/microservices";
 import * as Joi from "joi";
 import { PaymentsController } from "./payments.controller";
 import { PaymentsService } from "./payments.service";
@@ -11,10 +12,25 @@ import { PaymentsService } from "./payments.service";
       isGlobal: true,
       validationSchema: Joi.object({
         PORT: Joi.number().required(),
+        NOTIFICATIONS_PORT: Joi.number().required(),
+        NOTIFICATIONS_HOST: Joi.string().required(),
         STRIPE_SEVRET_KEY: Joi.string().required(),
       }),
     }),
-    LoggerModule
+    LoggerModule,
+    ClientsModule.registerAsync([
+      {
+        name: NOTIFICATIONS_SERVCIE,
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.TCP,
+          options: {
+            host: configService.get("NOTIFICATIONS_HOST"),
+            port: configService.get("NOTIFICATIONS_PORT"),
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
   ],
   controllers: [PaymentsController],
   providers: [PaymentsService],
