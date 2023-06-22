@@ -22,7 +22,7 @@ export class PaymentsService {
   public async createCharge({
     card,
     amount,
-    email
+    email,
   }: PaymentsCreateChargeDto): Promise<Stripe.Response<Stripe.PaymentIntent>> {
     const paymentMethod = await this.stripe.paymentMethods.create({
       type: "card",
@@ -37,7 +37,10 @@ export class PaymentsService {
       currency: "usd",
     });
 
-    this.notificationService.emit("notify_email", { email });
+    this.notificationService.emit("notify_email", {
+      email,
+      text: `Your Payment of $${amount} has compeleted successfully.`,
+    });
 
     return paymentIntent;
   }
